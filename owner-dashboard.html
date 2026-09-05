@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orders — The Royal Cafe &amp; Coffee</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Mukta:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --charcoal:#1E1815; --charcoal-2:#2E211A;
+    --orange:#C6491F; --gold:#F2A93B; --gold-soft:#F8D9A0;
+    --cream:#FBF1E4; --paper:#FFFBF5; --ink:#241D18; --ink-soft:#6E6157;
+    --line:#ECE0CF; --new:#C6491F; --done:#2E7D32;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--cream);color:var(--ink);font-family:'Mukta',sans-serif;padding-bottom:40px;}
+  header{
+    position:sticky;top:0;z-index:10;background:var(--charcoal);color:var(--gold-soft);
+    padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;
+    box-shadow:0 6px 20px rgba(30,22,16,.25);
+  }
+  header h1{font-family:'Fraunces',serif;font-size:19px;margin:0;font-weight:600;color:var(--gold-soft);}
+  header .sub{font-size:12px;color:#C9BBA0;margin-top:2px;}
+  .status{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#C9BBA0;}
+  .status .dot{width:9px;height:9px;border-radius:50%;background:#2E7D32;box-shadow:0 0 0 0 rgba(46,125,50,.6);animation:pulse 2s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(46,125,50,.5);}70%{box-shadow:0 0 0 8px rgba(46,125,50,0);}100%{box-shadow:0 0 0 0 rgba(46,125,50,0);}}
+  .refresh-btn{
+    background:var(--gold);color:var(--charcoal);border:none;border-radius:8px;
+    padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;
+  }
+  .wrap{max-width:720px;margin:0 auto;padding:16px;}
+  .setup-note{
+    background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;
+    margin-bottom:16px;font-size:14px;line-height:1.6;
+  }
+  .setup-note strong{color:var(--orange);}
+  .empty-state{
+    text-align:center;color:var(--ink-soft);padding:60px 20px;font-size:15px;
+  }
+  .order-card{
+    background:var(--paper);border:1px solid var(--line);border-radius:14px;
+    padding:16px;margin-bottom:12px;position:relative;overflow:hidden;
+  }
+  .order-card::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--stage-color, var(--new));
+  }
+  .order-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .order-id{font-weight:700;font-size:15px;}
+  .order-time{font-size:12.5px;color:var(--ink-soft);}
+  .badge{
+    display:inline-block;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;
+    margin-left:8px;vertical-align:middle;
+  }
+  .badge.stage{background:var(--stage-bg, rgba(198,73,31,.12));color:var(--stage-color, var(--new));}
+  .badge.type{background:rgba(30,22,16,.07);color:var(--ink-soft);}
+  .badge.unpaid{background:rgba(198,73,31,.12);color:var(--new);}
+  .badge.paid{background:rgba(46,125,50,.14);color:var(--done);}
+  .cust{margin-top:10px;font-size:14.5px;}
+  .cust a{color:var(--orange);text-decoration:none;font-weight:600;}
+  .items{margin-top:10px;font-size:13.5px;color:var(--ink);white-space:pre-line;line-height:1.6;background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 12px;}
+  .addr{margin-top:8px;font-size:13px;color:var(--ink-soft);}
+  .totals{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);gap:10px;flex-wrap:wrap;}
+  .total-amt{font-weight:700;font-size:17px;color:var(--orange);}
+  .advance-btn{
+    background:var(--charcoal);color:var(--gold-soft);border:none;border-radius:8px;
+    padding:9px 16px;font-weight:700;font-size:13px;cursor:pointer;
+  }
+  .advance-btn:disabled{opacity:.5;cursor:default;}
+  .pay-btn{
+    background:#fff;color:var(--new);border:1px solid var(--new);border-radius:8px;
+    padding:9px 14px;font-weight:700;font-size:13px;cursor:pointer;
+  }
+  .pay-btn.paid{background:rgba(46,125,50,.1);color:var(--done);border-color:var(--done);}
+  .pay-btn:disabled{opacity:.5;cursor:default;}
+  .track-link{font-size:12px;color:var(--ink-soft);margin-top:6px;}
+  .track-link a{color:var(--orange);font-weight:600;}
+  .screenshot-row{margin-top:10px;display:flex;align-items:center;gap:10px;}
+  .screenshot-thumb{
+    width:52px;height:52px;object-fit:cover;border-radius:9px;border:1px solid var(--line);
+    cursor:pointer;box-shadow:0 4px 10px rgba(30,22,16,.08);
+  }
+  .screenshot-row .ss-txt{font-size:12.5px;color:var(--ink-soft);}
+  .screenshot-row.missing .ss-txt{color:var(--new);font-weight:700;}
+  .lightbox{
+    position:fixed;inset:0;background:rgba(20,14,10,.86);z-index:300;
+    display:none;align-items:center;justify-content:center;padding:24px;
+  }
+  .lightbox.show{display:flex;}
+  .lightbox img{max-width:100%;max-height:100%;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+  .lightbox-close{
+    position:absolute;top:18px;right:20px;background:none;border:none;color:#fff;
+    font-size:30px;cursor:pointer;line-height:1;
+  }
+  .error-note{
+    background:#FBEAEA;border:1px solid #E3A9A9;color:#8A2626;border-radius:10px;
+    padding:14px;font-size:13.5px;margin-bottom:16px;
+  }
+  .view-tabs{display:flex;gap:8px;margin-bottom:14px;}
+  .tab-btn{
+    flex:1;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;
+    font-weight:700;font-size:13.5px;color:var(--ink-soft);cursor:pointer;font-family:'Mukta',sans-serif;
+  }
+  .tab-btn.active{background:var(--charcoal);color:var(--gold-soft);border-color:var(--charcoal);}
+  .history-filter{display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap;}
+  .history-filter input[type=date]{
+    border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-family:'Mukta',sans-serif;
+    font-size:13px;color:var(--ink);background:#fff;
+  }
+  .history-filter button{
+    background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 12px;
+    font-weight:700;font-size:12.5px;cursor:pointer;color:var(--ink-soft);
+  }
+  .history-filter button:hover{border-color:var(--orange);color:var(--orange);}
+  .history-date-heading{
+    font-family:'Fraunces',serif;font-size:15.5px;font-weight:600;color:var(--orange);
+    margin:22px 0 10px;padding-bottom:7px;border-bottom:1px solid var(--line);display:flex;
+    justify-content:space-between;align-items:baseline;
+  }
+  .history-date-heading:first-child{margin-top:0;}
+  .history-date-heading .count{font-size:12px;font-weight:400;color:var(--ink-soft);font-family:'Mukta',sans-serif;}
+  .history-card{
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:13px 15px;margin-bottom:9px;border-left:4px solid var(--new);
+  }
+  .history-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;}
+  .history-time{font-size:12px;color:var(--ink-soft);white-space:nowrap;}
+  .history-cust{font-size:13px;color:var(--ink-soft);margin-top:5px;}
+  .history-items{font-size:12.5px;color:var(--ink);margin-top:5px;white-space:pre-line;line-height:1.5;}
+  .history-foot{display:flex;justify-content:space-between;align-items:center;margin-top:9px;}
+  .history-total{font-weight:700;color:var(--orange);font-size:14px;}
+  .history-thumb{width:36px;height:36px;object-fit:cover;border-radius:7px;border:1px solid var(--line);cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close">&times;</button>
+  <img id="lightboxImg" src="" alt="Payment screenshot">
+</div>
+
+<header>
+  <div>
+    <h1>The Royal Cafe &amp; Coffee</h1>
+    <div class="sub" id="lastUpdated">Loading…</div>
+  </div>
+  <div class="status"><span class="dot"></span>Live</div>
+  <button class="refresh-btn" onclick="loadOrders()">Refresh</button>
+</header>
+
+<div class="wrap">
+  <div class="view-tabs">
+    <button class="tab-btn active" id="tabLive" onclick="switchView('live')">Live Orders</button>
+    <button class="tab-btn" id="tabHistory" onclick="switchView('history')">Order History</button>
+  </div>
+  <div class="history-filter" id="historyFilterBar" style="display:none;">
+    <input type="date" id="historyDateInput" onchange="onHistoryDateChange()">
+    <button onclick="setHistoryToday()">Today</button>
+    <button onclick="clearHistoryFilter()">Show all dates</button>
+  </div>
+  <div id="content">
+    <div class="empty-state">Loading orders…</div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG — paste your Google Apps Script Web App URL below.
+   See dashboard-setup.txt for how to get this.
+   ============================================================ */
+const DASHBOARD_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyuYCw6EkSBmFILEDslEOqHXRCpgcG_pq2CLrZtRgwuiyK4BKh7h6dztn0jKZ3hYsrvJw/exec'; // e.g. 'https://script.google.com/macros/s/AKfycb.../exec'
+const DASHBOARD_KEY = 'royal-cafe-2024'; // must match SECRET_KEY in the Apps Script
+
+const POLL_INTERVAL_MS = 10000;
+let knownOrderIds = new Set();
+let firstLoad = true;
+let pendingActions = new Set();
+let allOrdersCache = [];
+let currentView = 'live';
+let historyDateFilter = '';
+
+const DELIVERY_STAGES = ['Order Placed','Accepted','Preparing','Out for Delivery','Delivered'];
+const PICKUP_STAGES = ['Order Placed','Accepted','Preparing','Ready for Pickup','Completed'];
+const STAGE_COLORS = {
+  'Order Placed': {bg:'rgba(198,73,31,.12)', fg:'#C6491F'},
+  'Accepted': {bg:'rgba(198,73,31,.12)', fg:'#C6491F'},
+  'Preparing': {bg:'rgba(242,169,59,.18)', fg:'#B9740C'},
+  'Out for Delivery': {bg:'rgba(46,125,50,.12)', fg:'#2E7D32'},
+  'Ready for Pickup': {bg:'rgba(46,125,50,.12)', fg:'#2E7D32'},
+  'Delivered': {bg:'rgba(46,125,50,.18)', fg:'#1B5E20'},
+  'Completed': {bg:'rgba(46,125,50,.18)', fg:'#1B5E20'},
+};
+
+function stagesFor(order){
+  return /delivery/i.test(order['Order Type']||'') ? DELIVERY_STAGES : PICKUP_STAGES;
+}
+function stageIndex(order){
+  const stages = stagesFor(order);
+  const i = stages.indexOf(order.Status);
+  return i === -1 ? 0 : i;
+}
+
+function playAlertSound(){
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+    [0, 0.18].forEach((offset, i)=>{
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(i===0 ? 880 : 1046, now + offset);
+      gain.gain.setValueAtTime(0.0001, now + offset);
+      gain.gain.exponentialRampToValueAtTime(0.25, now + offset + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.3);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now + offset);
+      osc.stop(now + offset + 0.35);
+    });
+  }catch(err){ /* audio not available — silent alert still shows visually */ }
+}
+
+function timeAgo(dateStr){
+  const then = new Date(dateStr).getTime();
+  if(isNaN(then)) return '';
+  const diffMin = Math.round((Date.now() - then) / 60000);
+  if(diffMin < 1) return 'just now';
+  if(diffMin === 1) return '1 min ago';
+  if(diffMin < 60) return diffMin + ' min ago';
+  const diffHr = Math.round(diffMin / 60);
+  if(diffHr === 1) return '1 hr ago';
+  if(diffHr < 24) return diffHr + ' hrs ago';
+  return new Date(dateStr).toLocaleString();
+}
+
+function renderOrders(allOrders){
+  const content = document.getElementById('content');
+  // Live view = orders not yet at their final stage (Delivered / Completed).
+  // Finished orders still show up in Order History.
+  const orders = allOrders.filter(function(o){
+    const stages = stagesFor(o);
+    return stageIndex(o) < stages.length - 1;
+  });
+  if(!orders.length){
+    content.innerHTML = '<div class="empty-state">No live orders right now. New orders will appear here automatically — check Order History for past orders.</div>';
+    return;
+  }
+  content.innerHTML = orders.map(function(o){
+    const orderId = o['Order ID'];
+    const isPending = pendingActions.has(orderId);
+    const stages = stagesFor(o);
+    const idx = stageIndex(o);
+    const isFinal = idx >= stages.length - 1;
+    const nextStage = isFinal ? null : stages[idx + 1];
+    const color = STAGE_COLORS[o.Status] || STAGE_COLORS['Order Placed'];
+    const trackUrl = 'track-order.html?id=' + encodeURIComponent(orderId);
+    const isPaid = String(o.Payment).toLowerCase() === 'paid';
+    const paymentPendingKey = orderId + ':payment';
+    const isPaymentPending = pendingActions.has(paymentPendingKey);
+
+    return `
+      <div class="order-card" style="--stage-color:${color.fg};--stage-bg:${color.bg};">
+        <div class="order-top">
+          <span class="order-id">#${orderId}
+            <span class="badge stage">${o.Status||'Order Placed'}</span>
+            <span class="badge type">${o['Order Type']||''}</span>
+            <span class="badge ${isPaid?'paid':'unpaid'}">${isPaid?'✓ Paid':'Payment pending'}</span>
+          </span>
+          <span class="order-time">${timeAgo(o.Timestamp)}</span>
+        </div>
+        <div class="cust">
+          ${o.Name||''} — <a href="tel:${o.Phone}">${o.Phone||''}</a>
+        </div>
+        ${o.Address ? `<div class="addr">📍 ${o.Address}</div>` : ''}
+        <div class="items">${o.Items||''}</div>
+        ${o['Screenshot URL'] ? `
+        <div class="screenshot-row">
+          <img class="screenshot-thumb" src="${o['Screenshot URL']}" alt="Payment screenshot" onclick="openLightbox('${o['Screenshot URL']}')">
+          <span class="ss-txt">Tap to view payment screenshot</span>
+        </div>` : `
+        <div class="screenshot-row missing"><span class="ss-txt">⚠ No payment screenshot attached</span></div>`}
+        <div class="track-link">Customer tracking link: <a href="${trackUrl}" target="_blank">${trackUrl}</a></div>
+        <div class="totals">
+          <span class="total-amt">₹${o.Total||0}</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="pay-btn ${isPaid?'paid':''}" ${isPaid||isPaymentPending?'disabled':''} onclick="markPayment('${orderId}', this)">
+              ${isPaid ? '✓ Paid' : (isPaymentPending ? 'Updating…' : 'Mark as Paid')}
+            </button>
+            <button class="advance-btn" ${isFinal||isPending?'disabled':''} onclick="advanceStage('${orderId}','${nextStage}', this)">
+              ${isFinal ? '✓ ' + o.Status : (isPending ? 'Updating…' : 'Mark as ' + nextStage)}
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ============================================================
+   ORDER HISTORY — all orders, grouped by date, newest first
+   ============================================================ */
+function groupOrdersByDate(orders){
+  const map = new Map();
+  orders.forEach(function(o){
+    const d = new Date(o.Timestamp);
+    const key = isNaN(d.getTime())
+      ? 'Unknown date'
+      : d.toLocaleDateString('en-IN', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+    if(!map.has(key)) map.set(key, []);
+    map.get(key).push(o);
+  });
+  return Array.from(map.entries()).map(function([date, group]){ return {date, orders: group}; });
+}
+
+function historyMatchesFilter(o){
+  if(!historyDateFilter) return true;
+  const d = new Date(o.Timestamp);
+  if(isNaN(d.getTime())) return false;
+  const localDateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  return localDateStr === historyDateFilter;
+}
+
+function historyCardHtml(o){
+  const d = new Date(o.Timestamp);
+  const timeStr = isNaN(d.getTime()) ? '' : d.toLocaleTimeString('en-IN', {hour:'numeric', minute:'2-digit'});
+  const isPaid = String(o.Payment).toLowerCase() === 'paid';
+  const color = STAGE_COLORS[o.Status] || STAGE_COLORS['Order Placed'];
+  return `
+    <div class="history-card" style="border-left-color:${color.fg};">
+      <div class="history-top">
+        <span class="order-id">#${o['Order ID']}
+          <span class="badge stage" style="background:${color.bg};color:${color.fg};">${o.Status||''}</span>
+          <span class="badge ${isPaid?'paid':'unpaid'}">${isPaid?'✓ Paid':'Payment pending'}</span>
+        </span>
+        <span class="history-time">${timeStr}</span>
+      </div>
+      <div class="history-cust">${o.Name||''} — ${o.Phone||''} · ${o['Order Type']||''}</div>
+      <div class="history-items">${o.Items||''}</div>
+      <div class="history-foot">
+        <span class="history-total">₹${o.Total||0}</span>
+        ${o['Screenshot URL'] ? `<img class="history-thumb" src="${o['Screenshot URL']}" alt="Payment screenshot" onclick="openLightbox('${o['Screenshot URL']}')">` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function renderHistory(allOrders){
+  const content = document.getElementById('content');
+  const filtered = allOrders.filter(historyMatchesFilter);
+  if(!filtered.length){
+    content.innerHTML = '<div class="empty-state">No orders found' + (historyDateFilter ? ' for that date.' : ' yet.') + '</div>';
+    return;
+  }
+  const groups = groupOrdersByDate(filtered);
+  content.innerHTML = groups.map(function(g){
+    return `
+      <div class="history-date-heading">${g.date} <span class="count">${g.orders.length} order${g.orders.length===1?'':'s'}</span></div>
+      ${g.orders.map(historyCardHtml).join('')}
+    `;
+  }).join('');
+}
+
+function render(){
+  if(currentView === 'history') renderHistory(allOrdersCache);
+  else renderOrders(allOrdersCache);
+}
+
+function switchView(view){
+  currentView = view;
+  document.getElementById('tabLive').classList.toggle('active', view === 'live');
+  document.getElementById('tabHistory').classList.toggle('active', view === 'history');
+  document.getElementById('historyFilterBar').style.display = view === 'history' ? 'flex' : 'none';
+  render();
+}
+
+function onHistoryDateChange(){
+  historyDateFilter = document.getElementById('historyDateInput').value;
+  render();
+}
+function setHistoryToday(){
+  const d = new Date();
+  const val = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  document.getElementById('historyDateInput').value = val;
+  historyDateFilter = val;
+  render();
+}
+function clearHistoryFilter(){
+  historyDateFilter = '';
+  document.getElementById('historyDateInput').value = '';
+  render();
+}
+
+function openLightbox(url){
+  document.getElementById('lightboxImg').src = url;
+  document.getElementById('lightbox').classList.add('show');
+}
+function closeLightbox(){
+  document.getElementById('lightbox').classList.remove('show');
+  document.getElementById('lightboxImg').src = '';
+}
+
+function advanceStage(orderId, nextStage, btn){
+  pendingActions.add(orderId);
+  btn.disabled = true;
+  btn.textContent = 'Updating…';
+  fetch(DASHBOARD_SCRIPT_URL + '?key=' + encodeURIComponent(DASHBOARD_KEY) + '&action=updateStatus&orderId=' + encodeURIComponent(orderId) + '&status=' + encodeURIComponent(nextStage))
+    .then(()=>{ pendingActions.delete(orderId); loadOrders(); })
+    .catch(()=>{ pendingActions.delete(orderId); btn.disabled = false; btn.textContent = 'Mark as ' + nextStage; alert('Could not update — check your connection and try again.'); });
+}
+
+function markPayment(orderId, btn){
+  const key = orderId + ':payment';
+  pendingActions.add(key);
+  btn.disabled = true;
+  btn.textContent = 'Updating…';
+  fetch(DASHBOARD_SCRIPT_URL + '?key=' + encodeURIComponent(DASHBOARD_KEY) + '&action=updatePayment&orderId=' + encodeURIComponent(orderId) + '&payment=Paid')
+    .then(()=>{ pendingActions.delete(key); loadOrders(); })
+    .catch(()=>{ pendingActions.delete(key); btn.disabled = false; btn.textContent = 'Mark as Paid'; alert('Could not update — check your connection and try again.'); });
+}
+
+function loadOrders(){
+  if(!DASHBOARD_SCRIPT_URL){
+    document.getElementById('content').innerHTML =
+      '<div class="setup-note"><strong>Almost there —</strong> this dashboard isn\'t connected yet. ' +
+      'Open <code>dashboard-setup.txt</code> for the 5-minute setup, then paste your Google Apps Script ' +
+      'URL into <code>DASHBOARD_SCRIPT_URL</code> near the top of this file.</div>';
+    document.getElementById('lastUpdated').textContent = 'Not connected';
+    return;
+  }
+
+  fetch(DASHBOARD_SCRIPT_URL + '?key=' + encodeURIComponent(DASHBOARD_KEY))
+    .then(function(res){ return res.json(); })
+    .then(function(data){
+      if(data.error){
+        document.getElementById('content').innerHTML =
+          '<div class="error-note">Couldn\'t load orders: <strong>' + data.error + '</strong>. ' +
+          'Check that DASHBOARD_KEY here matches SECRET_KEY in your Apps Script.</div>';
+        return;
+      }
+      const orders = data.orders || [];
+
+      if(!firstLoad){
+        const newOnes = orders.filter(function(o){ return !knownOrderIds.has(o['Order ID']); });
+        if(newOnes.length) playAlertSound();
+      }
+      orders.forEach(function(o){ knownOrderIds.add(o['Order ID']); });
+      firstLoad = false;
+
+      allOrdersCache = orders;
+      render();
+      document.getElementById('lastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+    })
+    .catch(function(){
+      document.getElementById('lastUpdated').textContent = 'Connection error — retrying…';
+    });
+}
+
+loadOrders();
+setInterval(loadOrders, POLL_INTERVAL_MS);
+</script>
+</body>
+</html>
