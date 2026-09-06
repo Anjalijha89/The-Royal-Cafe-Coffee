@@ -91,6 +91,27 @@
     position:absolute;top:18px;right:20px;background:none;border:none;color:#fff;
     font-size:30px;cursor:pointer;line-height:1;
   }
+  .login-screen{
+    position:fixed;inset:0;background:var(--cream);z-index:500;
+    display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  .login-box{
+    background:var(--paper);border:1px solid var(--line);border-radius:16px;
+    padding:32px 26px;max-width:340px;width:100%;text-align:center;
+    box-shadow:0 12px 40px rgba(30,22,16,.12);
+  }
+  .login-box h2{font-family:'Fraunces',serif;color:var(--charcoal-2);margin:0 0 6px;font-size:20px;}
+  .login-box p{color:var(--ink-soft);font-size:13.5px;margin:0 0 20px;}
+  .login-box input{
+    width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:9px;
+    font-family:'Mukta',sans-serif;font-size:15px;text-align:center;letter-spacing:1px;
+    margin-bottom:12px;
+  }
+  .login-box button{
+    width:100%;background:var(--charcoal);color:var(--gold-soft);border:none;border-radius:9px;
+    padding:12px;font-weight:700;font-size:14.5px;cursor:pointer;
+  }
+  .login-error{color:var(--new);font-size:13px;margin-top:10px;min-height:16px;}
   .error-note{
     background:#FBEAEA;border:1px solid #E3A9A9;color:#8A2626;border-radius:10px;
     padding:14px;font-size:13.5px;margin-bottom:16px;
@@ -138,6 +159,16 @@
   <img id="lightboxImg" src="" alt="Payment screenshot">
 </div>
 
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <h2>The Royal Cafe &amp; Coffee</h2>
+    <p>Enter your registered phone number to view the orders dashboard.</p>
+    <input type="tel" id="loginPhoneInput" placeholder="10-digit phone number" maxlength="10" inputmode="numeric" onkeydown="if(event.key==='Enter') attemptLogin()">
+    <button onclick="attemptLogin()">Log In</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
 <header>
   <div>
     <h1>The Royal Cafe &amp; Coffee</h1>
@@ -167,8 +198,43 @@
    CONFIG — paste your Google Apps Script Web App URL below.
    See dashboard-setup.txt for how to get this.
    ============================================================ */
-const DASHBOARD_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzkRuxEPXkJdeiTfc9jY13hv3VlpcJW-LOyz1SFScNhd0yA72fkPEhc03_RPRk6kZK_6Q/exec'; // e.g. 'https://script.google.com/macros/s/AKfycb.../exec'
-const DASHBOARD_KEY = 'royal-cafe-2024'; // must match SECRET_KEY in the Apps Script
+const DASHBOARD_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby6UMyEKfyIPv_p2nFV_DOaTDfVoj90vZLjqzKgvpBrIfR8kwr65Il7509DPJg8FbuAxA/exec'; // e.g. 'https://script.google.com/macros/s/AKfycb.../exec'
+const DASHBOARD_KEY = 'royal-cafe-2026'; // must match SECRET_KEY in the Apps Script
+
+/* ============================================================
+   LOGIN — only this phone number can view the dashboard on
+   this device. NOTE: this only hides the page from casual
+   visitors; it is not real security since the number is
+   visible in this file's source. The DASHBOARD_KEY above is
+   what actually protects your order data server-side.
+   ============================================================ */
+const ALLOWED_PHONES = ['9693715374'];
+
+function attemptLogin(){
+  const input = document.getElementById('loginPhoneInput');
+  const errorEl = document.getElementById('loginError');
+  const digits = (input.value || '').replace(/[^0-9]/g, '').slice(-10);
+  if(ALLOWED_PHONES.includes(digits)){
+    try{ localStorage.setItem('rc_owner_phone', digits); }catch(err){}
+    document.getElementById('loginScreen').style.display = 'none';
+    loadOrders();
+    setInterval(loadOrders, POLL_INTERVAL_MS);
+  } else {
+    errorEl.textContent = 'That number isn\'t authorized for this dashboard.';
+    input.value = '';
+    input.focus();
+  }
+}
+
+function checkLoginOnLoad(){
+  let saved = '';
+  try{ saved = localStorage.getItem('rc_owner_phone') || ''; }catch(err){}
+  if(ALLOWED_PHONES.includes(saved)){
+    document.getElementById('loginScreen').style.display = 'none';
+    loadOrders();
+    setInterval(loadOrders, POLL_INTERVAL_MS);
+  }
+}
 
 const POLL_INTERVAL_MS = 10000;
 let knownOrderIds = new Set();
@@ -453,8 +519,8 @@ function loadOrders(){
     });
 }
 
-loadOrders();
-setInterval(loadOrders, POLL_INTERVAL_MS);
+checkLoginOnLoad();
 </script>
 </body>
 </html>
+
