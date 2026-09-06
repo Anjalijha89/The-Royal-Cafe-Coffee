@@ -501,9 +501,65 @@ footer{background:#FFF8EE;padding:34px 16px 40px}footer .fname{font-size:19px}
 .track-fab.show{display:inline-flex;}
 .track-fab .dot{width:8px;height:8px;border-radius:50%;background:#F2A93B;animation:trackPulse 2s infinite;}
 @keyframes trackPulse{0%{box-shadow:0 0 0 0 rgba(242,169,59,.6);}70%{box-shadow:0 0 0 7px rgba(242,169,59,0);}100%{box-shadow:0 0 0 0 rgba(242,169,59,0);}}
+
+/* ---------- ACCOUNT (login/register + order history) ---------- */
+.acct-field{margin-bottom:14px;}
+.acct-field label{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:5px;}
+.acct-field input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:14.5px;font-family:'Mukta',sans-serif;background:#fff;}
+.acct-btn{width:100%;background:var(--maroon);color:var(--gold-soft);border:none;border-radius:10px;padding:12px;font-weight:700;font-size:14.5px;cursor:pointer;margin-top:2px;font-family:'Mukta',sans-serif;}
+.acct-btn.secondary{background:transparent;border:1px solid var(--line);color:var(--ink-soft);margin-top:10px;}
+.acct-btn:disabled{opacity:.65;}
+.acct-welcome{text-align:center;margin-bottom:14px;}
+.acct-welcome .hi{font-family:'Fraunces',serif;font-size:18px;color:var(--maroon);}
+.acct-welcome .ph{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+.acct-history-title{font-size:13.5px;font-weight:700;color:var(--charcoal);margin:18px 0 8px;}
+.acct-order{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:#fff;}
+.acct-order .row1{display:flex;justify-content:space-between;align-items:center;font-size:13.5px;font-weight:700;}
+.acct-order .row2{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);margin-top:3px;}
+.acct-order .status-pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(198,73,31,.1);color:var(--maroon);}
+.acct-order .status-pill.done{background:rgba(46,125,50,.12);color:#2E7D32;}
+.acct-empty{text-align:center;color:var(--ink-soft);font-size:13px;padding:10px 0 4px;}
+.acct-error{color:#C62828;font-size:12px;margin:-8px 0 12px;display:none;}
+.acct-intro{text-align:center;color:var(--ink-soft);font-size:13px;margin-bottom:14px;}
+
+/* ---------- LOGIN GATE (shown before menu, on first visit) ---------- */
+.app-hidden{display:none;}
+.gate-overlay{
+  position:fixed;inset:0;z-index:500;
+  background:
+    radial-gradient(1200px 500px at 15% -10%, rgba(210,163,76,0.25), transparent 60%),
+    linear-gradient(180deg, var(--maroon-deep), var(--maroon) 70%);
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;overflow-y:auto;
+}
+.gate-card{
+  background:var(--paper);width:100%;max-width:400px;border-radius:20px;
+  padding:30px 24px 26px;box-shadow:0 20px 60px rgba(26,19,15,.35);text-align:center;
+}
+.gate-crest{display:flex;justify-content:center;margin-bottom:12px;}
+.gate-title{font-family:'Fraunces',serif;font-size:19px;color:var(--maroon);margin:0 0 4px;font-weight:600;}
+.gate-skip{display:block;width:100%;background:none;border:none;color:var(--ink-soft);font-size:12.5px;text-decoration:underline;margin-top:16px;cursor:pointer;font-family:'Mukta',sans-serif;padding:0;}
 </style>
 </head>
 <body>
+
+<!-- ============ LOGIN GATE (shown before the menu, on first visit) ============ -->
+<div class="gate-overlay" id="gateOverlay">
+  <div class="gate-card">
+    <div class="gate-crest">
+      <svg width="40" height="40" viewBox="0 0 46 46" fill="none">
+        <rect x="4" y="4" width="38" height="38" transform="rotate(45 23 23)" stroke="var(--gold)" stroke-width="1.3"/>
+        <text x="23" y="29" text-anchor="middle" font-family="Fraunces, serif" font-size="14" font-weight="600" fill="var(--gold)">RC</text>
+      </svg>
+    </div>
+    <h3 class="gate-title" id="gateTitle">Welcome to The Royal Cafe &amp; Coffee</h3>
+    <div id="gateBody"><!-- injected by JS --></div>
+    <button class="gate-skip" id="gateSkipBtn" onclick="skipGate()">Continue without logging in</button>
+  </div>
+</div>
+
+<!-- ============ APP (hidden until login/register/skip) ============ -->
+<div id="appContent" class="app-hidden">
 
 <!-- ============ HERO ============ -->
 <div class="hero">
@@ -522,6 +578,7 @@ footer{background:#FFF8EE;padding:34px 16px 40px}footer .fname{font-size:19px}
   <div class="hero-cta">
     <button class="btn btn-gold" onclick="document.getElementById('menu-top').scrollIntoView()">View menu</button>
     <button class="btn btn-outline" onclick="window.location.href='tel:+919200211339'">Call to order</button>
+    <button class="btn btn-outline" id="accountBtn" onclick="openAccountModal()">Login / Register</button>
   </div>
 </div>
 
@@ -589,6 +646,17 @@ footer{background:#FFF8EE;padding:34px 16px 40px}footer .fname{font-size:19px}
 <button class="track-fab" id="trackFab" onclick="showTrackOverlay()">
   <span class="dot"></span> Track my order
 </button>
+
+</div><!-- /#appContent -->
+
+<!-- ============ ACCOUNT (Login / Register + Order History) ============ -->
+<div class="track-overlay" id="acctOverlay">
+  <div class="track-card" id="acctCard">
+    <button class="track-close" onclick="closeAccountModal()" aria-label="Close">&times;</button>
+    <div class="track-head"><h3 id="acctTitle">Login / Register</h3></div>
+    <div id="acctBody"><!-- injected by JS --></div>
+  </div>
+</div>
 
 <script>
 // qrcode-generator (kazuhikoarase) - MIT licensed, minified core reproduced for inline embedding
@@ -1272,20 +1340,314 @@ const RESTAURANT_UPI_NAME = 'The Royal Cafe & Coffee';
    setup. Paste your deployed Web App URL below once it's ready —
    until then this silently does nothing, and WhatsApp still works.
    ============================================================ */
-const DASHBOARD_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzkRuxEPXkJdeiTfc9jY13hv3VlpcJW-LOyz1SFScNhd0yA72fkPEhc03_RPRk6kZK_6Q/exec'; // e.g. 'https://script.google.com/macros/s/AKfycb.../exec'
+const DASHBOARD_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby6UMyEKfyIPv_p2nFV_DOaTDfVoj90vZLjqzKgvpBrIfR8kwr65Il7509DPJg8FbuAxA/exec'; // e.g. 'https://script.google.com/macros/s/AKfycb.../exec'
 
 function sendOrderToDashboard(order){
-  if(!DASHBOARD_SCRIPT_URL) return; // not set up yet — skip silently
-  try{
-    fetch(DASHBOARD_SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: {'Content-Type':'text/plain'},
-      body: JSON.stringify(order)
-    });
-  }catch(err){
+  if(!DASHBOARD_SCRIPT_URL) return Promise.resolve(); // not set up yet — skip silently
+  return fetch(DASHBOARD_SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type':'text/plain'},
+    body: JSON.stringify(order)
+  }).catch(err => {
     /* dashboard is a bonus feature — never block the actual order over this */
+  });
+}
+
+/* ============================================================
+   CUSTOMER ACCOUNT — phone-based login/register, saved details
+   & order history (same Apps Script backend as order tracking)
+   ============================================================ */
+function getSavedCustomer(){
+  try{ const raw = localStorage.getItem('rc_customer'); return raw ? JSON.parse(raw) : null; }
+  catch(err){ return null; }
+}
+function saveCustomer(customer){
+  try{ localStorage.setItem('rc_customer', JSON.stringify(customer)); }catch(err){}
+}
+function clearCustomer(){
+  try{ localStorage.removeItem('rc_customer'); }catch(err){}
+}
+
+function updateAccountBtn(){
+  const btn = document.getElementById('accountBtn');
+  if(!btn) return;
+  const cust = getSavedCustomer();
+  btn.textContent = (cust && cust.name) ? `Hi, ${cust.name.split(' ')[0]}` : 'Login / Register';
+}
+
+let _pendingPhone = '';
+let _pendingOrders = [];
+
+function openAccountModal(){
+  document.getElementById('acctOverlay').classList.add('show');
+  const cust = getSavedCustomer();
+  if(cust && cust.phone){
+    renderLoggedInAccount(cust, null);
+    if(DASHBOARD_SCRIPT_URL){
+      fetch(DASHBOARD_SCRIPT_URL + '?login=' + encodeURIComponent(cust.phone))
+        .then(res => res.json())
+        .then(data => { if(data.found) renderLoggedInAccount(cust, data.orders || []); })
+        .catch(()=>{ /* keep showing cached details */ });
+    }
+  } else {
+    renderPhoneStep();
   }
+}
+function closeAccountModal(){
+  document.getElementById('acctOverlay').classList.remove('show');
+}
+
+function renderPhoneStep(){
+  document.getElementById('acctTitle').textContent = 'Login / Register';
+  document.getElementById('acctBody').innerHTML = `
+    <div class="acct-intro">Enter your mobile number — we'll recognize you if you've ordered before, or set up a new account in a few seconds.</div>
+    <div class="acct-field">
+      <label>Your 10-digit mobile number</label>
+      <input id="acctPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="e.g. 9876543210"
+        oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();continueWithPhone();}">
+    </div>
+    <div class="acct-error" id="acctError"></div>
+    <button class="acct-btn" id="acctContinueBtn" onclick="continueWithPhone()">Continue</button>
+  `;
+}
+
+async function continueWithPhone(){
+  const phoneInput = document.getElementById('acctPhone');
+  const errorEl = document.getElementById('acctError');
+  const phone = phoneInput.value.trim();
+  if(!/^[6-9]\d{9}$/.test(phone)){
+    errorEl.textContent = 'Please enter a valid 10-digit mobile number.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  errorEl.style.display = 'none';
+  const btn = document.getElementById('acctContinueBtn');
+  btn.textContent = 'Checking…'; btn.disabled = true;
+
+  if(!DASHBOARD_SCRIPT_URL){
+    renderRegisterStep(phone, []);
+    return;
+  }
+  try{
+    const res = await fetch(DASHBOARD_SCRIPT_URL + '?login=' + encodeURIComponent(phone));
+    const data = await res.json();
+    if(data.found){
+      const cust = { phone, name: data.name, address: data.address || '' };
+      saveCustomer(cust);
+      updateAccountBtn();
+      renderLoggedInAccount(cust, data.orders || []);
+    } else {
+      renderRegisterStep(phone, data.orders || []);
+    }
+  }catch(err){
+    errorEl.textContent = "Couldn't check that right now — please try again.";
+    errorEl.style.display = 'block';
+    btn.textContent = 'Continue'; btn.disabled = false;
+  }
+}
+
+function renderRegisterStep(phone, existingOrders){
+  _pendingPhone = phone;
+  _pendingOrders = existingOrders || [];
+  document.getElementById('acctTitle').textContent = 'New here?';
+  document.getElementById('acctBody').innerHTML = `
+    <div class="acct-intro">We don't have an account for ${phone} yet — tell us your name to save your details for next time.</div>
+    <div class="acct-field">
+      <label>Your name</label>
+      <input id="acctName" type="text" placeholder="Your name"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();completeRegistration();}">
+    </div>
+    <div class="acct-error" id="acctError2"></div>
+    <button class="acct-btn" id="acctRegisterBtn" onclick="completeRegistration()">Save &amp; continue</button>
+    <button class="acct-btn secondary" onclick="renderPhoneStep()">Use a different number</button>
+  `;
+}
+
+function completeRegistration(){
+  const nameInput = document.getElementById('acctName');
+  const errorEl = document.getElementById('acctError2');
+  const name = nameInput.value.trim();
+  if(!name){
+    errorEl.textContent = 'Please add your name.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  errorEl.style.display = 'none';
+  const btn = document.getElementById('acctRegisterBtn');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+
+  const cust = { phone: _pendingPhone, name, address: '' };
+  saveCustomer(cust);
+  updateAccountBtn();
+
+  if(DASHBOARD_SCRIPT_URL){
+    fetch(DASHBOARD_SCRIPT_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: {'Content-Type':'text/plain'},
+      body: JSON.stringify({ action:'register', phone: _pendingPhone, name })
+    }).catch(()=>{});
+  }
+
+  renderLoggedInAccount(cust, _pendingOrders);
+}
+
+function renderLoggedInAccount(cust, orders){
+  document.getElementById('acctTitle').textContent = 'My account';
+  const historyHtml = (orders === null)
+    ? '<div class="acct-empty">Loading your order history…</div>'
+    : (orders.length
+      ? orders.map(o=>{
+          const isDone = /delivered|completed/i.test(o.status||'');
+          return `<div class="acct-order">
+            <div class="row1"><span>#${o.orderId}</span><span class="status-pill ${isDone?'done':''}">${o.status||'Order Placed'}</span></div>
+            <div class="row2"><span>${o.orderType||''}</span><span>₹${o.total||0}</span></div>
+          </div>`;
+        }).join('')
+      : '<div class="acct-empty">No past orders yet — your first order will show up here.</div>');
+
+  document.getElementById('acctBody').innerHTML = `
+    <div class="acct-welcome">
+      <div class="hi">Hi, ${cust.name || 'there'} 👋</div>
+      <div class="ph">${cust.phone}</div>
+    </div>
+    <button class="acct-btn" onclick="useSavedDetails()">Use my saved details at checkout</button>
+    <div class="acct-history-title">Order history</div>
+    ${historyHtml}
+    <button class="acct-btn secondary" onclick="logoutAccount()">Log out</button>
+  `;
+}
+
+function useSavedDetails(){
+  closeAccountModal();
+  openDrawer();
+  prefillFromSavedCustomer();
+}
+
+function logoutAccount(){
+  clearCustomer();
+  updateAccountBtn();
+  renderPhoneStep();
+}
+
+function prefillFromSavedCustomer(){
+  const cust = getSavedCustomer();
+  if(!cust) return;
+  const nameEl = document.getElementById('nameField');
+  const phoneEl = document.getElementById('phoneField');
+  const addrEl = document.getElementById('addressField');
+  if(nameEl && cust.name) nameEl.value = cust.name;
+  if(phoneEl && cust.phone) phoneEl.value = cust.phone;
+  if(addrEl && cust.address) addrEl.value = cust.address;
+}
+
+/* ============================================================
+   LOGIN GATE — shown on first visit, before the menu/app.
+   Reuses the same phone-lookup / register backend calls as the
+   account panel above, just rendered into the full-screen gate.
+   ============================================================ */
+function unlockApp(){
+  document.getElementById('gateOverlay').style.display = 'none';
+  document.getElementById('appContent').classList.remove('app-hidden');
+}
+
+function skipGate(){
+  try{ localStorage.setItem('rc_gate_skipped', '1'); }catch(err){}
+  unlockApp();
+}
+
+function gateRenderPhoneStep(){
+  document.getElementById('gateTitle').textContent = 'Login or register to continue';
+  document.getElementById('gateBody').innerHTML = `
+    <div class="acct-intro">Enter your mobile number — we'll recognize you if you've ordered before, or set up a new account in a few seconds.</div>
+    <div class="acct-field" style="text-align:left;">
+      <label>Your 10-digit mobile number</label>
+      <input id="gatePhone" type="tel" inputmode="numeric" maxlength="10" placeholder="e.g. 9876543210"
+        oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();gateContinueWithPhone();}">
+    </div>
+    <div class="acct-error" id="gateError"></div>
+    <button class="acct-btn" id="gateContinueBtn" onclick="gateContinueWithPhone()">Continue</button>
+  `;
+}
+
+async function gateContinueWithPhone(){
+  const phoneInput = document.getElementById('gatePhone');
+  const errorEl = document.getElementById('gateError');
+  const phone = phoneInput.value.trim();
+  if(!/^[6-9]\d{9}$/.test(phone)){
+    errorEl.textContent = 'Please enter a valid 10-digit mobile number.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  errorEl.style.display = 'none';
+  const btn = document.getElementById('gateContinueBtn');
+  btn.textContent = 'Checking…'; btn.disabled = true;
+
+  if(!DASHBOARD_SCRIPT_URL){
+    gateRenderRegisterStep(phone);
+    return;
+  }
+  try{
+    const res = await fetch(DASHBOARD_SCRIPT_URL + '?login=' + encodeURIComponent(phone));
+    const data = await res.json();
+    if(data.found){
+      saveCustomer({ phone, name: data.name, address: data.address || '' });
+      updateAccountBtn();
+      unlockApp();
+    } else {
+      gateRenderRegisterStep(phone);
+    }
+  }catch(err){
+    errorEl.textContent = "Couldn't check that right now — please try again.";
+    errorEl.style.display = 'block';
+    btn.textContent = 'Continue'; btn.disabled = false;
+  }
+}
+
+function gateRenderRegisterStep(phone){
+  _pendingPhone = phone;
+  document.getElementById('gateTitle').textContent = 'New here?';
+  document.getElementById('gateBody').innerHTML = `
+    <div class="acct-intro">We don't have an account for ${phone} yet — tell us your name to save your details for next time.</div>
+    <div class="acct-field" style="text-align:left;">
+      <label>Your name</label>
+      <input id="gateName" type="text" placeholder="Your name"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();gateCompleteRegistration();}">
+    </div>
+    <div class="acct-error" id="gateError2"></div>
+    <button class="acct-btn" id="gateRegisterBtn" onclick="gateCompleteRegistration()">Save &amp; continue</button>
+    <button class="acct-btn secondary" onclick="gateRenderPhoneStep()">Use a different number</button>
+  `;
+}
+
+function gateCompleteRegistration(){
+  const nameInput = document.getElementById('gateName');
+  const errorEl = document.getElementById('gateError2');
+  const name = nameInput.value.trim();
+  if(!name){
+    errorEl.textContent = 'Please add your name.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  errorEl.style.display = 'none';
+  const btn = document.getElementById('gateRegisterBtn');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+
+  const cust = { phone: _pendingPhone, name, address: '' };
+  saveCustomer(cust);
+  updateAccountBtn();
+
+  if(DASHBOARD_SCRIPT_URL){
+    fetch(DASHBOARD_SCRIPT_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: {'Content-Type':'text/plain'},
+      body: JSON.stringify({ action:'register', phone: _pendingPhone, name })
+    }).catch(()=>{});
+  }
+
+  unlockApp();
 }
 
 /* ============================================================
@@ -1389,6 +1751,19 @@ function hideTrackOverlay(){
   if(saved && saved.orderId && (Date.now() - saved.ts) < 6*60*60*1000){
     activeTrackOrderId = saved.orderId;
     document.getElementById('trackFab').classList.add('show');
+  }
+})();
+
+updateAccountBtn();
+
+(function initGate(){
+  const cust = getSavedCustomer();
+  let skipped = false;
+  try{ skipped = localStorage.getItem('rc_gate_skipped') === '1'; }catch(err){}
+  if((cust && cust.phone) || skipped){
+    unlockApp();
+  } else {
+    gateRenderPhoneStep();
   }
 })();
 
@@ -1630,6 +2005,7 @@ function renderDrawer(){
   </div>`;
 
   body.innerHTML = html;
+  prefillFromSavedCustomer();
   setOrderType(orderType, true);
   updateTotals();
 }
@@ -1871,7 +2247,7 @@ function clearScreenshot(){
   document.getElementById('ssUploadLabel').textContent = 'Attach screenshot of your UPI payment';
 }
 
-function placeOrder(){
+async function placeOrder(){
   const name = document.getElementById('nameField')?.value.trim();
   const phone = document.getElementById('phoneField')?.value.trim();
   const address = document.getElementById('addressField')?.value.trim();
@@ -1924,7 +2300,9 @@ function placeOrder(){
   const itemsList = cartEntries().map(([,e])=>`${e.name} (${e.variant}) x${e.qty} — ₹${e.price*e.qty}`).join('\n');
   const orderTypeLabel = orderType === 'delivery' ? 'Home delivery' : orderType === 'takeaway' ? 'Takeaway' : 'Dine-in';
 
-  sendOrderToDashboard({
+  document.getElementById('ssUploadLabel').textContent = 'Sending your order…';
+
+  await sendOrderToDashboard({
     orderId, name, phone: phoneDigits, orderType: orderTypeLabel,
     address: orderType === 'delivery' ? address : '',
     items: itemsList, subtotal: sub, deliveryFee: fee, total,
@@ -1932,6 +2310,8 @@ function placeOrder(){
   });
 
   saveActiveOrder(orderId, orderTypeLabel);
+  saveCustomer({ phone: phoneDigits, name, address: orderType === 'delivery' ? address : (getSavedCustomer()?.address || '') });
+  updateAccountBtn();
   closeDrawer();
   showTrackOverlay(orderId, orderTypeLabel);
 
